@@ -10,3 +10,6 @@ Allows HOTP keys between 6 and 9 characters long, optionally terminated with ENT
 Initial counter configurable at any time
 
 Shared secret can be up to 32 bytes.
+
+
+Originally written for Arduino Micro, it can be used on any PCB with 32U4 processor and USB interface.
