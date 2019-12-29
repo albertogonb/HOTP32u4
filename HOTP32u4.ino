@@ -298,11 +298,6 @@ void PowerDown() {
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   sleep_enable();
   sleep_cpu();
-//  ADCSRA &= ~(1 << 7);
-//  SMCR |= ( 1<<2 );
-//  SMCR |= 1;
-//  __asm__ __volatile__("sleep");
-
 }
 
 void Reset() {
