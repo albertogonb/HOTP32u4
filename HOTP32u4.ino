@@ -69,8 +69,8 @@ void setup() {
   Keyboard.begin();
   delay(1500);
   led = HIGH;
-  Key hotp_clave(hotp_secret, long_secret);
-  SimpleHOTP hotp(hotp_clave, ++hotp_counter);
+  Key hotp_key(hotp_secret, long_secret);
+  SimpleHOTP hotp(hotp_key, ++hotp_counter);
   hotp.setDigits(hotp_digits);
   hotp_decimal = hotp.generateHOTP();
   switch (hotp_digits) {
