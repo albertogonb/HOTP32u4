@@ -4,7 +4,7 @@
   Copyright (c) 2019 Alberto González Balaguer  https://github.com/albertogonb
   Licensed under the EUPL v1.2  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12
 
-  Hardware: ATmega32u4 badusb, Arduino Micro
+  Hardware: ATmega32u4 Arduino Micro
   
 */
 #define _TASK_SLEEP_ON_IDLE_RUN
