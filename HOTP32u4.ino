@@ -95,7 +95,7 @@ void setup() {
   while (! Serial);                 // wait for /dev/ttyACM0 init
   Serial.print(F("HOTP32u4 1.0\r\n\r\n"));
   Serial.print(F("Copyright (c) 2019 Alberto Gonzalez Balaguer  https://github.com/albertogonb\r\n"));
-  Serial.print(F("Licensed under the EUPL v1.2  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12\r\n\r\n"));
+  Serial.print(F("Licensed under the EUPL v1.2  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12\r\n\n"));
   sprintf(text, "BAUD = %lu, F_CPU = %lu, DIGI = %d, COUN = %lu", baud, F_CPU, hotp_digits, hotp_counter); Serial.write(text);
   Serial.print(F("\r\n\nCommands: r Reset  fX Final  dN Digits  cNNNNNN Counter  sXXX.XXX Secret\r\n"));
 
