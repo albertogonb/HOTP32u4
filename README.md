@@ -1,7 +1,7 @@
 # HOTP32u4
 HOTP generator for ATmega32u4
 
-It acts as an OTP token by injecting the HOTP code through the USB Keyboard interface.
+It wortks as an OTP token, injecting the HOTP code through the USB Keyboard interface.
 
 The number of digits, terminator, counter and shared secret are configurable by the USB ACM Serial interface.
 
