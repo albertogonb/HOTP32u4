@@ -14,6 +14,6 @@ Shared secret can be up to 32 bytes.
 Originally written for Arduino Micro, it can be used on any PCB with 32U4 processor and USB interface.
 
 
-Copyright (c) 2019 Alberto Gonzalez Balaguer  https://github.com/albertogonb
+Copyright (c) 2019 Alberto González Balaguer  https://github.com/albertogonb
 
 Licensed under the EUPL-1.2-or-later  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12
