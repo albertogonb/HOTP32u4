@@ -92,7 +92,7 @@ void setup() {
   EEPROMwl.putToNext(0, hotp_counter);
   led = LOW;
 
-  while (! Serial);                 // wait /dev/ttyAMC0 init
+  while (! Serial);                 // wait for /dev/ttyACM0 init
   Serial.print(F("HOTP32u4 1.0\r\n\r\n"));
   Serial.print(F("Copyright (c) 2019 Alberto Gonzalez Balaguer  https://github.com/albertogonb\r\n"));
   Serial.print(F("Licensed under the EUPL v1.2  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12\r\n\r\n"));
