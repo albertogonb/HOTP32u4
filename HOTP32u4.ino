@@ -1,7 +1,7 @@
 /*
   HOTP32u4  1.0
 
-  Copyright (c) 2019 Alberto Gonzalez Balaguer  https://github.com/albertogonb
+  Copyright (c) 2019 Alberto González Balaguer  https://github.com/albertogonb
   Licensed under the EUPL v1.2  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12
 
   Hardware: ATmega32u4 badusb, Arduino Micro
