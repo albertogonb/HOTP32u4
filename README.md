@@ -1,5 +1,5 @@
 # HOTP32u4
-HOTP software token for ATmega32u4.
+ATmega32u4 as HOTP token.
 
 It works as an OTP token, injecting the HOTP code through the USB Keyboard interface.
 
