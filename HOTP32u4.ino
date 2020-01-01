@@ -43,6 +43,10 @@ uint8_t   c, n;
 
 void setup() {
 
+/*
+  On first boot, initialize EEPROM with the initial configuration
+  Then stop the processor
+*/
   EEPROMwl.begin(EEwl_VERSION, EEwl_NUM, EEwl_SIZE);
   if (EEPROM.read(1) == 0xff) {
     EEPROM.write(EEwl_SIZE, '\n');
@@ -54,6 +58,10 @@ void setup() {
     EEPROMwl.putToNext(0, (int32_t)-1);
     PowerDown();
   }
+
+/*
+  Load configuration from EEPROM.
+*/
   EEPROMwl.get(0, hotp_counter);
   hotp_final = EEPROM.read(EEwl_SIZE);
   hotp_digits = EEPROM.read(EEwl_SIZE + 1);
@@ -62,6 +70,10 @@ void setup() {
     hotp_secret[n] = EEPROM.read(EEwl_SIZE + 3 + n);
   }
 
+/*
+  Generate HOTP code and type it.
+  If the serial port is not opened from the host, the process does not continue
+*/
   Keyboard.begin();
   delay(1500);
   led = HIGH;
@@ -88,6 +100,9 @@ void setup() {
   EEPROMwl.putToNext(0, hotp_counter);
   led = LOW;
 
+/*
+ If host opens the serial port, presents the banner, init watchdog and enters configuration mode
+*/
   while (! Serial);                 // wait for /dev/ttyACM0 init
   Serial.print(F("HOTP32u4 1.0\r\n\r\n"));
   Serial.print(F("Copyright (c) 2019 Alberto Gonzalez Balaguer  https://github.com/albertogonb\r\n"));
@@ -101,6 +116,9 @@ void setup() {
 
 void loop() {
 
+/*
+  Run scheduler and reset watchdog
+*/
   ts.execute();
   wdt_reset();
   
