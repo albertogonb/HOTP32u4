@@ -18,23 +18,20 @@
 Output<LED_BUILTIN> led;
 
 Scheduler ts;
-
 void  tReadMenu();
 void  tLedOn();
-
-Task tRead(1, TASK_FOREVER, tReadMenu, &ts, true);                    // 1ms
-Task tLed(TASK_IMMEDIATE, TASK_FOREVER, tLedOn, &ts, true);           // 500ms
+Task  tRead(1, TASK_FOREVER, tReadMenu, &ts, true);                    // 1ms
+Task  tLed(TASK_IMMEDIATE, TASK_FOREVER, tLedOn, &ts, true);           // 500ms
 
 #define EEwl_VERSION  1
 #define EEwl_NUM      1
 #define EEwl_MAX      1024
 #define EEwl_SIZE     (EEwl_MAX - sizeof(const_secret) - 3)
 
-const uint8_t PROGMEM const_secret[32] = {
+const uint8_t const_secret[32] PROGMEM = {
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 };
-const uint32_t baud = 500000;
 int32_t   hotp_counter;
 uint8_t   hotp_secret[sizeof(const_secret)];
 uint32_t  hotp_decimal;
@@ -65,7 +62,6 @@ void setup() {
     hotp_secret[n] = EEPROM.read(EEwl_SIZE + 3 + n);
   }
 
-  Serial.begin(baud);
   Keyboard.begin();
   delay(1500);
   led = HIGH;
@@ -96,7 +92,7 @@ void setup() {
   Serial.print(F("HOTP32u4 1.0\r\n\r\n"));
   Serial.print(F("Copyright (c) 2019 Alberto Gonzalez Balaguer  https://github.com/albertogonb\r\n"));
   Serial.print(F("Licensed under the EUPL-1.2-or-later  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12\r\n\n"));
-  sprintf(text, "BAUD = %lu, F_CPU = %lu, DIGI = %d, COUN = %lu", baud, F_CPU, hotp_digits, hotp_counter); Serial.write(text);
+  sprintf(text, "F_CPU = %lu, DIGI = %d, COUN = %lu", F_CPU, hotp_digits, hotp_counter); Serial.write(text);
   Serial.print(F("\r\n\nCommands: r Reset  fX Final  dN Digits  cNNNNNN Counter  sXXX.XXX Secret\r\n"));
 
   wdt_enable(WDTO_120MS);
