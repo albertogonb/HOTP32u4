@@ -1,11 +1,11 @@
 /*
-  HOTP32u4  1.0
+  HOTP32u4  1.1
 
   Copyright (c) 2019 Alberto González Balaguer  https://github.com/albertogonb
   Licensed under the EUPL-1.2-or-later  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12
 
   Hardware: ATmega32u4 Arduino Micro
-  
+
 */
 #define _TASK_SLEEP_ON_IDLE_RUN
 #include <TaskScheduler.h>
@@ -60,7 +60,7 @@ void setup() {
   }
 
 /*
-  Load configuration from EEPROM.
+  Load configuration from EEPROM
 */
   EEPROMwl.get(0, hotp_counter);
   hotp_final = EEPROM.read(EEwl_SIZE);
@@ -71,7 +71,7 @@ void setup() {
   }
 
 /*
-  Generate HOTP code and type it.
+  Generate next HOTP code and type it
   If the serial port is not opened from the host, the process does not continue
 */
   Keyboard.begin();
@@ -101,13 +101,14 @@ void setup() {
   led = LOW;
 
 /*
- If host opens the serial port, presents the banner, init watchdog and enters configuration mode
+  If host opens the serial port, presents the banner, init watchdog and enters configuration mode (loop)
 */
-  while (! Serial);                 // wait for /dev/ttyACM0 init
-  Serial.print(F("HOTP32u4 1.0\r\n\r\n"));
+  while (! Serial);                       // wait for /dev/ttyACM0 init
+  EEPROMwl.putToNext(0, --hotp_counter);  // restore previous counter
+  Serial.print(F("HOTP32u4 1.1\r\n\r\n"));
   Serial.print(F("Copyright (c) 2019 Alberto Gonzalez Balaguer  https://github.com/albertogonb\r\n"));
   Serial.print(F("Licensed under the EUPL-1.2-or-later  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12\r\n\n"));
-  sprintf(text, "F_CPU = %lu, DIGI = %d, COUN = %lu", F_CPU, hotp_digits, hotp_counter); Serial.write(text);
+  sprintf(text, "F_CPU = %lu, DIGI = %d, COUN = %ld", F_CPU, hotp_digits, hotp_counter); Serial.write(text);
   Serial.print(F("\r\n\nCommands: r Reset  fX Final  dN Digits  cNNNNNN Counter  sXXX.XXX Secret\r\n"));
 
   wdt_enable(WDTO_120MS);
