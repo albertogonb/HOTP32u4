@@ -1,5 +1,5 @@
 /*
-  HOTP32u4  1.1
+  HOTP32u4  1.2
 
   Copyright (c) 2019 Alberto González Balaguer  https://github.com/albertogonb
   Licensed under the EUPL-1.2-or-later  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12
@@ -26,14 +26,14 @@ Task  tLed(TASK_IMMEDIATE, TASK_FOREVER, tLedOn, &ts, true);           // 500ms
 #define EEwl_VERSION  1
 #define EEwl_NUM      1
 #define EEwl_MAX      1024
-#define EEwl_SIZE     (EEwl_MAX - sizeof(const_secret) - 3)
+#define EEwl_SIZE     (EEwl_MAX - sizeof(hotp_secret) - 3)
+#define EE_FINAL      (EEwl_SIZE)
+#define EE_DIGITS     (EEwl_SIZE + 1)
+#define EE_LONG       (EEwl_SIZE + 2)
+#define EE_SECRET     (EEwl_SIZE + 3)
 
-const uint8_t const_secret[32] PROGMEM = {
-  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
-};
 int32_t   hotp_counter;
-uint8_t   hotp_secret[sizeof(const_secret)];
+uint8_t   hotp_secret[32];
 uint32_t  hotp_decimal;
 uint8_t   hotp_final;
 uint8_t   hotp_digits;
@@ -44,16 +44,16 @@ uint8_t   c, n;
 void setup() {
 
 /*
-  On first boot, initialize EEPROM with the initial configuration
-  Then stop the processor
+  On first boot, save initial configuration to EEPROM
+  Then stop CPU
 */
   EEPROMwl.begin(EEwl_VERSION, EEwl_NUM, EEwl_SIZE);
   if (EEPROM.read(1) == 0xff) {
-    EEPROM.write(EEwl_SIZE, '\n');
-    EEPROM.write(EEwl_SIZE + 1, 6);
-    EEPROM.write(EEwl_SIZE + 2, sizeof(const_secret));
-    for (n = 0; n < sizeof(const_secret); ++n) {
-      EEPROM.update(EEwl_SIZE + 3 + n, pgm_read_byte_near(const_secret + n));
+    EEPROM.write(EE_FINAL, '\n');
+    EEPROM.write(EE_DIGITS, 6);
+    EEPROM.write(EE_LONG, sizeof(hotp_secret));
+    for (n = 0; n < sizeof(hotp_secret); ++n) {
+      EEPROM.update(EE_SECRET + n, 0xff);
     }
     EEPROMwl.putToNext(0, (int32_t)-1);
     PowerDown();
@@ -63,11 +63,11 @@ void setup() {
   Load configuration from EEPROM
 */
   EEPROMwl.get(0, hotp_counter);
-  hotp_final = EEPROM.read(EEwl_SIZE);
-  hotp_digits = EEPROM.read(EEwl_SIZE + 1);
-  long_secret = EEPROM.read(EEwl_SIZE + 2);
+  hotp_final = EEPROM.read(EE_FINAL);
+  hotp_digits = EEPROM.read(EE_DIGITS);
+  long_secret = EEPROM.read(EE_LONG);
   for (n = 0; n < long_secret; ++n) {
-    hotp_secret[n] = EEPROM.read(EEwl_SIZE + 3 + n);
+    hotp_secret[n] = EEPROM.read(EE_SECRET + n);
   }
 
 /*
@@ -105,7 +105,7 @@ void setup() {
 */
   while (! Serial);                       // wait for /dev/ttyACM0 init
   EEPROMwl.putToNext(0, --hotp_counter);  // restore previous counter
-  Serial.print(F("HOTP32u4 1.1\r\n\r\n"));
+  Serial.print(F("HOTP32u4 1.2\r\n\n"));
   Serial.print(F("Copyright (c) 2019 Alberto Gonzalez Balaguer  https://github.com/albertogonb\r\n"));
   Serial.print(F("Licensed under the EUPL-1.2-or-later  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12\r\n\n"));
   sprintf(text, "F_CPU = %lu, DIGI = %d, COUN = %ld", F_CPU, hotp_digits, hotp_counter); Serial.write(text);
@@ -185,7 +185,7 @@ void  tReadFinal() {
       Serial.print(F("\rFinal = NONE\r\n"));
       break;
     }
-    EEPROM.update(EEwl_SIZE, hotp_final);
+    EEPROM.update(EE_FINAL, hotp_final);
   }
 
 }
@@ -236,7 +236,7 @@ void  tReadDigits() {
     }
     hotp_digits = c - '0';
     sprintf(text, "\rDigits = %d\r\n", hotp_digits); Serial.write(text);
-    EEPROM.update(EEwl_SIZE + 1, hotp_digits);
+    EEPROM.update(EE_DIGITS, hotp_digits);
   }
 
 }
@@ -248,10 +248,10 @@ void  tReadSecret() {
     Serial.write(c);
     if (c == '\r') {
       Serial.print(F("Secret = "));
-      EEPROM.update(EEwl_SIZE + 2, long_secret);
+      EEPROM.update(EE_LONG, long_secret);
       for (n = 0; n < long_secret; ++n) {
         sprintf(text, "%02x", hotp_secret[n]); Serial.write(text);
-        EEPROM.update(EEwl_SIZE + 3 + n, hotp_secret[n]);
+        EEPROM.update(EE_SECRET + n, hotp_secret[n]);
       }
       Serial.print(F("\r\n"));
       tRead.setCallback(&tReadMenu);
@@ -281,8 +281,8 @@ void  tReadSecret() {
     }
     else {
       nibble_low = true;
-      if (long_secret >= sizeof(const_secret)) {
-        sprintf(text, " More than %d characteres\r\n", sizeof(const_secret) * 2); Serial.write(text);
+      if (long_secret >= sizeof(hotp_secret)) {
+        sprintf(text, " More than %d characteres\r\n", sizeof(hotp_secret) * 2); Serial.write(text);
         tRead.setCallback(&tReadMenu);
         return;
       }
