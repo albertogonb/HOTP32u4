@@ -38,7 +38,7 @@ uint32_t  hotp_decimal;
 uint8_t   hotp_final;
 uint8_t   hotp_digits;
 uint8_t   long_secret;
-char      text[64];
+char      text[46];
 uint8_t   c, n;
 
 void setup() {
@@ -282,7 +282,7 @@ void  tReadSecret() {
     else {
       nibble_low = true;
       if (long_secret >= sizeof(hotp_secret)) {
-        sprintf(text, " More than %d characteres\r\n", sizeof(hotp_secret) * 2); Serial.write(text);
+        sprintf(text, " More than %d characters\r\n", sizeof(hotp_secret) * 2); Serial.write(text);
         tRead.setCallback(&tReadMenu);
         return;
       }
