@@ -1,12 +1,14 @@
+#define MY_PROGRAM    F("HOTP32u4 1.2\r\n\n")
+#define MY_COPYRIGHT  F("Copyright (c) 2019 Alberto González Balaguer  https://github.com/albertogonb\r\n")
+#define MY_LICENSE    F("Licensed under the EUPL-1.2-or-later  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12\r\n\n")
 /*
-  HOTP32u4  1.2
 
-  Copyright (c) 2019 Alberto González Balaguer  https://github.com/albertogonb
-  Licensed under the EUPL-1.2-or-later  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12
-
+  HOTP32u4
+  
   Hardware: ATmega32u4 Arduino Micro
 
 */
+
 #define _TASK_SLEEP_ON_IDLE_RUN
 #include <TaskScheduler.h>
 #include <avr/wdt.h>
@@ -105,9 +107,9 @@ void setup() {
 */
   while (! Serial);                       // wait for /dev/ttyACM0 init
   EEPROMwl.putToNext(0, --hotp_counter);  // restore previous counter
-  Serial.print(F("HOTP32u4 1.2\r\n\n"));
-  Serial.print(F("Copyright (c) 2019 Alberto Gonzalez Balaguer  https://github.com/albertogonb\r\n"));
-  Serial.print(F("Licensed under the EUPL-1.2-or-later  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12\r\n\n"));
+  Serial.print(MY_PROGRAM);
+  Serial.print(MY_COPYRIGHT);
+  Serial.print(MY_LICENSE);
   sprintf(text, "F_CPU = %lu, DIGI = %d, COUN = %ld", F_CPU, hotp_digits, hotp_counter); Serial.write(text);
   Serial.print(F("\r\n\nCommands: r Reset  fX Final  dN Digits  cNNNNNN Counter  sXXX.XXX Secret\r\n"));
 
