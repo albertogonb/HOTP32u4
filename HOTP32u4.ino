@@ -1,13 +1,31 @@
-#define MY_PROGRAM    F("HOTP32u4 1.2\r\n\n")
-#define MY_COPYRIGHT  F("Copyright (c) 2019 Alberto González Balaguer  https://github.com/albertogonb\r\n")
-#define MY_LICENSE    F("Licensed under the EUPL-1.2-or-later  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12\r\n\n")
+
+#define BANNER     F("\
+HOTP32u4 1.3\r\n\n\
+Copyright (c) 2019-2020 Alberto González Balaguer  https://github.com/albertogonb\r\n\
+Licensed under the EUPL-1.2-or-later  https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12\r\n\n\
+")
+
 /*
-
   HOTP32u4
-  
-  Hardware: ATmega32u4 Arduino Micro
 
+  Hardware based on ATmega32U4:
+
+    Arduino Micro
+      Used PINs:  USB, LED
+      Free PINs:  UART, I2C, SPI, D4-D12, A0-A5
+
+    Diymore DM MICRO-AU
+      Used PINs:  USB, LED
+      Free PINs:  UART, I2C, SPI, D9-D11, A0-A2
+
+    Goldyqin HW-374 32U4 Virtual Keyboard
+      Used PINs:  USB
+      Free PINs:  SPI
 */
+
+#if !defined(__AVR_ATmega32U4__)
+#error Only supports ATmega32U4 microcontroller
+#endif
 
 #define _TASK_SLEEP_ON_IDLE_RUN
 #include <TaskScheduler.h>
@@ -16,14 +34,9 @@
 #include <Keyboard.h>
 #include <SimpleHOTP.h>
 #include <EEPROMWearLevel.h>
+#include <ArduinoUniqueID.h>
 
 Output<LED_BUILTIN> led;
-
-Scheduler ts;
-void  tReadMenu();
-void  tLedOn();
-Task  tRead(1, TASK_FOREVER, tReadMenu, &ts, true);                    // 1ms
-Task  tLed(TASK_IMMEDIATE, TASK_FOREVER, tLedOn, &ts, true);           // 500ms
 
 #define EEwl_VERSION  1
 #define EEwl_NUM      1
@@ -40,8 +53,17 @@ uint32_t  hotp_decimal;
 uint8_t   hotp_final;
 uint8_t   hotp_digits;
 uint8_t   long_secret;
-char      text[46];
+char      text[38];
 uint8_t   c, n;
+
+#define LED_ON    HIGH
+#define LED_OFF   LOW
+
+Scheduler ts;
+void  tReadMenu();
+void  tLedOn();
+Task  tRead(1, TASK_FOREVER, tReadMenu, &ts, true);                    // 1ms
+Task  tLed(TASK_IMMEDIATE, TASK_FOREVER, tLedOn, &ts, true);           // 500ms
 
 void setup() {
 
@@ -57,20 +79,20 @@ void setup() {
     for (n = 0; n < sizeof(hotp_secret); ++n) {
       EEPROM.update(EE_SECRET + n, 0xff);
     }
-    EEPROMwl.putToNext(0, (int32_t)-1);
+    EEPROMwl.putToNext(0, -1L);
     PowerDown();
   }
 
 /*
   Load configuration from EEPROM
 */
-  EEPROMwl.get(0, hotp_counter);
   hotp_final = EEPROM.read(EE_FINAL);
   hotp_digits = EEPROM.read(EE_DIGITS);
   long_secret = EEPROM.read(EE_LONG);
   for (n = 0; n < long_secret; ++n) {
     hotp_secret[n] = EEPROM.read(EE_SECRET + n);
   }
+  EEPROMwl.get(0, hotp_counter);
 
 /*
   Generate next HOTP code and type it
@@ -78,7 +100,7 @@ void setup() {
 */
   Keyboard.begin();
   delay(1500);
-  led = HIGH;
+  led = LED_ON;
   Key hotp_key(hotp_secret, long_secret);
   SimpleHOTP hotp(hotp_key, ++hotp_counter);
   hotp.setDigits(hotp_digits);
@@ -100,17 +122,17 @@ void setup() {
   Keyboard.print(text);
   Keyboard.end();
   EEPROMwl.putToNext(0, hotp_counter);
-  led = LOW;
+  led = LED_OFF;
 
 /*
   If host opens the serial port, presents the banner, init watchdog and enters configuration mode (loop)
 */
   while (! Serial);                       // wait for /dev/ttyACM0 init
   EEPROMwl.putToNext(0, --hotp_counter);  // restore previous counter
-  Serial.print(MY_PROGRAM);
-  Serial.print(MY_COPYRIGHT);
-  Serial.print(MY_LICENSE);
-  sprintf(text, "F_CPU = %lu, DIGI = %d, COUN = %ld", F_CPU, hotp_digits, hotp_counter); Serial.write(text);
+  Serial.print(BANNER);
+  sprintf(text, "CPU=ATmega32U4 SN=%02X%02X%02X%02X%02X%02X%02X%02X\r\n", UniqueID8[0], UniqueID8[1], UniqueID8[2], UniqueID8[3],
+    UniqueID8[4], UniqueID8[5], UniqueID8[6], UniqueID8[7]); Serial.write(text);
+  sprintf(text, "F_CPU=%lu DIGI=%d COUN=%ld", F_CPU, hotp_digits, hotp_counter); Serial.write(text);
   Serial.print(F("\r\n\nCommands: r Reset  fX Final  dN Digits  cNNNNNN Counter  sXXX.XXX Secret\r\n"));
 
   wdt_enable(WDTO_120MS);
@@ -163,6 +185,8 @@ void  tReadMenu() {
 
 }
 
+const char invalid[] PROGMEM = " Invalid character\r\n";
+
 void  tReadFinal() {
 
   if (Serial.available() > 0) {
@@ -170,7 +194,7 @@ void  tReadFinal() {
     Serial.write(c);
     tRead.setCallback(&tReadMenu);
     if ((c != 'e') && (c != 't') && (c != 'n')) {
-      Serial.print(F(" Invalid character\r\n"));
+      Serial.print(invalid);
       return;
     }
     switch (c) {
@@ -210,7 +234,7 @@ void  tReadCounter() {
     }
     else {
     if ((c < '0') || (c > '9')) {
-      Serial.print(F(" Invalid character\r\n"));
+      Serial.print(invalid);
       tRead.setCallback(&tReadMenu);
       return;
     }
@@ -233,7 +257,7 @@ void  tReadDigits() {
     Serial.write(c);
     tRead.setCallback(&tReadMenu);
     if ((c < '6') || (c > '9')) {
-      Serial.print(F(" Invalid character\r\n"));
+      Serial.print(invalid);
       return;
     }
     hotp_digits = c - '0';
@@ -260,7 +284,7 @@ void  tReadSecret() {
       return;
     }
     if (((c < '0') || (c > '9')) && ((c < 'a') || (c > 'f')) && ((c < 'A') || (c > 'F'))) {
-      Serial.print(F(" Invalid character\r\n"));
+      Serial.print(invalid);
       tRead.setCallback(&tReadMenu);
       return;
     }
@@ -296,7 +320,7 @@ void  tReadSecret() {
 
 void  tLedOn() {
 
-  led = HIGH;
+  led = LED_ON;
   tLed.setCallback(&tLedOff);
   tLed.delay(50);
 
@@ -304,7 +328,7 @@ void  tLedOn() {
 
 void  tLedOff() {
 
-  led = LOW;
+  led = LED_OFF;
   tLed.setCallback(&tLedOn);
   tLed.delay(500 - 50);
 
@@ -322,6 +346,6 @@ void Reset() {
 
   Serial.print(F("\rRebooting ...\r\n\n"));
   wdt_enable(WDTO_15MS);     // Reset by WatchDog
-  while (1);
+  while (true);
   
 }
